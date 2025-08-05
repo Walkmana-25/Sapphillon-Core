@@ -1,0 +1,22 @@
+[package]
+name = "sapphillon_core"
+version = "0.1.0"
+edition = "2024"
+authors = ["Yuta Takahashi <y.highbridge04@gmail.com>"]
+license-file = "LICENSE"
+readme = "README.md"
+description = "Core library for Sapphillon, a Rust-based Workflow runtime."
+repository = "https://github.com/Walkmana-25/Sapphillon-Core"
+homepage = "https://github.com/Walkmana-25/Sapphillon-Core"
+
+[dependencies]
+anyhow = "1.0"
+tokio = { version = "1", features = ["full"] }
+log = "0.4"
+
+tonic = "0.12.0"
+prost = "0.13.1"
+prost-types = "0.13.1"
+
+[build-dependencies]
+tonic-build = "0.12.0"
