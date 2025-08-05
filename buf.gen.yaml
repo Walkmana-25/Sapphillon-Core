@@ -2,9 +2,9 @@ version: v2
 clean: true
 plugins:
 - remote: buf.build/community/neoeinstein-prost:v0.4.0
-  out: src/proto_generated
+  out: src/proto
 - remote: buf.build/community/neoeinstein-tonic:v0.4.1
-  out: src/proto_generated
+  out: src/proto
 inputs:
   - git_repo: https://github.com/Walkmana-25/Sapphillon_API.git
     branch: v0.1.0-alpha

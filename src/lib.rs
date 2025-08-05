@@ -1,6 +1,4 @@
-pub mod proto {
-    include!("proto_generated.rs");
-}
+pub mod proto;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -8,7 +6,7 @@ pub fn add(left: u64, right: u64) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::add;
 
     #[test]
     fn it_works() {
