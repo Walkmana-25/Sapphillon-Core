@@ -7,12 +7,10 @@ use deno_core::RuntimeOptions;
 use deno_core::error::JsError;
 use deno_core::Extension;
 use deno_core::OpDecl;
-use deno_core::extension;
 
 pub struct SapphillonRuntime {
     runtime: Option<JsRuntime>,
     runtime_options: RuntimeOptions,
-    workflow_plugin_function: Vec<Extension>,
 }
 
 impl SapphillonRuntime {
@@ -20,32 +18,42 @@ impl SapphillonRuntime {
         SapphillonRuntime {
             runtime: None,
             runtime_options: Default::default(),
-            workflow_plugin_function: Vec::new(),
         }
     }
 
-    pub fn add_plugin_function(&mut self, func: OpDecl, name: &'static str) {
-        // Store OpDecl in a Vec to ensure it lives long enough
-        let ops_vec = vec![func];
-        let ext = Extension {
-            name,
-            deps: &[],
-            js_files: Cow::Borrowed(&[]),
-            esm_files: Cow::Borrowed(&[]),
-            lazy_loaded_esm_files: Cow::Borrowed(&[]),
-            esm_entry_point: None,
-            ops: Cow::Owned(ops_vec),
-            objects: Cow::Borrowed(&[]),
-            external_references: Cow::Borrowed(&[]),
-            global_template_middleware: None,
-            global_object_middleware: None,
-            op_state_fn: None,
-            needs_lazy_init: false,
-            middleware_fn: None,
-            enabled: true,
-        };
+    pub fn initialize_runtime(&mut self, extensions: Vec<(Vec<OpDecl>, &'static str)>) -> Result<(), Box<JsError>> {
+        let mut extension_vec: Vec<Extension> = Vec::new();
+        for (ops, name) in extensions {
+            let ext = Extension {
+                name,
+                deps: &[],
+                js_files: Cow::Borrowed(&[]),
+                esm_files: Cow::Borrowed(&[]),
+                lazy_loaded_esm_files: Cow::Borrowed(&[]),
+                esm_entry_point: None,
+                ops: Cow::Owned(ops),
+                objects: Cow::Borrowed(&[]),
+                external_references: Cow::Borrowed(&[]),
+                global_template_middleware: None,
+                global_object_middleware: None,
+                op_state_fn: None,
+                needs_lazy_init: false,
+                middleware_fn: None,
+                enabled: true,
+            };
 
-        self.workflow_plugin_function.push(ext);
+            extension_vec.push(ext);
+        }
+
+        if self.runtime.is_none() {
+            let options = RuntimeOptions {
+                extensions: extension_vec,
+                ..Default::default()
+            };
+            self.runtime = Some(JsRuntime::new(options));
+        }
+
+        Ok(())
     }
 }
 
@@ -91,7 +99,6 @@ mod tests {
         let mut sapphillon_runtime = SapphillonRuntime {
             runtime: Some(JsRuntime::new(Default::default())),
             runtime_options: Default::default(),
-            workflow_plugin_function: Vec::new(),
         };
 
         let result = run_script(script, &mut sapphillon_runtime);
