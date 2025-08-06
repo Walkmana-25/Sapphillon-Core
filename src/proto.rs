@@ -22,9 +22,9 @@ pub mod google {
             }
         }
     }
-     pub mod bytestream {
-         include!("proto/google.bytestream.rs");
-     }
+    pub mod bytestream {
+        include!("proto/google.bytestream.rs");
+    }
     pub mod longrunning {
         include!("proto/google.longrunning.rs");
     }
@@ -33,14 +33,13 @@ pub mod google {
             include!("proto/google.geo.type.rs");
         }
     }
-     pub mod rpc {
-         include!("proto/google.rpc.rs");
-         pub mod context {
-             include!("proto/google.rpc.context.rs");
-         }
-     }
+    pub mod rpc {
+        include!("proto/google.rpc.rs");
+        pub mod context {
+            include!("proto/google.rpc.context.rs");
+        }
+    }
     pub mod r#type {
         include!("proto/google.type.rs");
     }
 }
-
