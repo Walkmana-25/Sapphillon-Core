@@ -104,4 +104,16 @@ mod tests {
         let result = run_script(script, &mut sapphillon_runtime);
         assert!(result.is_ok(), "Script should run successfully");
     }
+    #[test]
+    fn test_run_script_hello() { 
+        let script = "a = 1 + 1; console.log('Hello, world!');console.log(a);";
+
+        let mut sapphillon_runtime = SapphillonRuntime {
+            runtime: Some(JsRuntime::new(Default::default())),
+            runtime_options: Default::default(),
+        };
+
+        let result = run_script(script, &mut sapphillon_runtime);
+        assert!(result.is_ok(), "Script should run successfully");
+    }
 }
