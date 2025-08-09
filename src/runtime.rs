@@ -46,24 +46,26 @@ impl Default for SapphillonRuntime {
 /// # Arguments
 ///
 /// * `script` - A string slice containing the JavaScript code to be executed.
-/// * `sapphillon_runtime` - A mutable reference to the SapphillonRuntime instance where the script will be executed.
+/// * ` ext` - A vector of `OpDecl` that defines operations to be registered in the runtime. You should use `op2` to define these operations. But you do not have to use extension! macro.
 ///
 /// # Returns
 ///
 /// * `Result<(), Box<JsError>>` - Returns Ok(()) if the script executes successfully, or an error wrapped in Box<JsError> if an error occurs.
 ///
-pub fn run_script(script: &str, ext: Vec<OpDecl>) {
-    let ext_vec: &'static [OpDecl] = Box::leak(ext.into_boxed_slice());
+pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>) -> Result<(), Box<JsError>> {
+    // let ext_vec: &'static [OpDecl] = Box::leak(ext.into_boxed_slice());
     let extension = Extension{
         name: "ext",
-        ops: std::borrow::Cow::Borrowed(ext_vec),
+        ops: std::borrow::Cow::Owned(ext),
         ..Default::default()
     };
     let mut runtime = JsRuntime::new(RuntimeOptions {
         extensions: vec![extension],
         ..Default::default()
     });
-    runtime.execute_script("workflow.js", script.to_string()).unwrap();
+    runtime.execute_script("workflow.js", script.to_string())?;
+    
+    Ok(())
 }
 
 
@@ -80,8 +82,8 @@ mod tests {
         }
         
         let script = r#"
-        Deno.core.print("aa\n");
-        console.log(Deno.core.ops.test_op([1, 2, 3, 4, 5]));
+        console.log("Hello World! From Sapphillon Runtime! with JavaScript and Deno!");
+        console.log("Sum of [1, 2, 3, 4, 5]", Deno.core.ops.test_op([1, 2, 3, 4, 5]));
         "#;
 
         let result = run_script(script, vec![test_op()]);
@@ -93,61 +95,18 @@ mod tests {
     fn test_run_script() { 
         let script = "1 + 1;";
 
-        let mut sapphillon_runtime = SapphillonRuntime {
-            runtime: Some(JsRuntime::new(Default::default())),
-            runtime_options: Default::default(),
-        };
 
         let result = run_script(script, vec![]);
+        assert!(result.is_ok(), "Script should run successfully");
     }
     #[test]
     fn test_run_script_hello() { 
         let script = "a = 1 + 1; console.log('Hello, world!');console.log(a);";
 
-        let mut sapphillon_runtime = SapphillonRuntime {
-            runtime: Some(JsRuntime::new(Default::default())),
-            runtime_options: Default::default(),
-        };
 
-        // let result = run_script(script, &mut sapphillon_runtime);
-        // assert!(result.is_ok(), "Script should run successfully");
+        let result = run_script(script, vec![]);
+        assert!(result.is_ok(), "Script should run successfully");
     }
     
-    #[test]
-    fn test_system() {
-       use deno_core::error::JsError;
-use deno_core::{extension, op2, Extension, JsRuntime, RuntimeOptions};
-use deno_core::serde_v8;
-use deno_core::serde::{Deserialize, Serialize};
-use std::rc::Rc;
 
-#[op2]
-fn test_op(#[serde] a: Vec<i32>) -> i32 {
-    a.iter().sum()
-}
-
-// 拡張定義
-extension!(
-    my_ext,
-    ops = [test_op],
-);
-
-    // RuntimeOptions に ops を含む拡張を登録
-    let ext: Extension = my_ext::init();
-
-    let mut runtime = JsRuntime::new(RuntimeOptions {
-        extensions: vec![ext],
-        ..Default::default()
-    });
-
-    // JSコード内で ops を呼び出す
-    let script = r#"
-        Deno.core.print("Running test_op...\n");
-        let sum = Deno.core.ops.test_op([1, 2, 3, 4, 5]);
-        Deno.core.print("Sum: " + sum + "\n");
-    "#;
-
-    runtime.execute_script("test.js", script.to_string()).unwrap();
-
-    }
 }
