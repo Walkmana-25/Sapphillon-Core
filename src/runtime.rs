@@ -7,6 +7,11 @@ use deno_core::RuntimeOptions;
 use deno_core::error::JsError;
 use deno_core::Extension;
 use deno_core::OpDecl;
+use deno_core::extension;
+use deno_core::op2;
+use deno_core::serde_v8;
+use deno_core::serde;
+use deno_core::serde_json;
 
 pub struct SapphillonRuntime {
     runtime: Option<JsRuntime>,
@@ -21,40 +26,6 @@ impl SapphillonRuntime {
         }
     }
 
-    pub fn initialize_runtime(&mut self, extensions: Vec<(Vec<OpDecl>, &'static str)>) -> Result<(), Box<JsError>> {
-        let mut extension_vec: Vec<Extension> = Vec::new();
-        for (ops, name) in extensions {
-            let ext = Extension {
-                name,
-                deps: &[],
-                js_files: Cow::Borrowed(&[]),
-                esm_files: Cow::Borrowed(&[]),
-                lazy_loaded_esm_files: Cow::Borrowed(&[]),
-                esm_entry_point: None,
-                ops: Cow::Owned(ops),
-                objects: Cow::Borrowed(&[]),
-                external_references: Cow::Borrowed(&[]),
-                global_template_middleware: None,
-                global_object_middleware: None,
-                op_state_fn: None,
-                needs_lazy_init: false,
-                middleware_fn: None,
-                enabled: true,
-            };
-
-            extension_vec.push(ext);
-        }
-
-        if self.runtime.is_none() {
-            let options = RuntimeOptions {
-                extensions: extension_vec,
-                ..Default::default()
-            };
-            self.runtime = Some(JsRuntime::new(options));
-        }
-
-        Ok(())
-    }
 }
 
 impl Default for SapphillonRuntime {
@@ -82,15 +53,54 @@ impl Default for SapphillonRuntime {
 /// * `Result<(), Box<JsError>>` - Returns Ok(()) if the script executes successfully, or an error wrapped in Box<JsError> if an error occurs.
 ///
 fn run_script(script: &str, sapphillon_runtime: &mut SapphillonRuntime) -> Result<(), Box<JsError>> {
-    sapphillon_runtime.runtime.as_mut().unwrap().execute_script("workflow.js", script.to_string())?;
+    match sapphillon_runtime.runtime {
+        Some(ref mut runtime) => {
+            runtime.execute_script("workflow.js", script.to_string())?;
+        }
+        None => {
+            let mut runtime = JsRuntime::new(Default::default());
+            runtime.execute_script("workflow.js", script.to_string())?;
+            sapphillon_runtime.runtime = Some(runtime);
+        }
+    }
 
     Ok(())
-
 }
+
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use super::*;
+    use deno_core::*;
+
+    #[test]
+    fn test_extension() {
+        
+        #[op2]
+        fn test_op(#[serde] a: Vec<i32>) -> i32 {
+            a.iter().sum()
+        }
+        
+        extension!(
+            runtime_js,
+            ops = [test_op],
+        );
+        
+        let mut runtime = SapphillonRuntime::new();
+        runtime.runtime_options.extensions = vec![runtime_js::init()];
+        runtime.runtime_options.module_loader = Some(Rc::new(FsModuleLoader));
+
+        let script = r#"
+        Deno.core.print("aa\n");
+        console.log(Deno.core.ops.test_op([2, 3]));
+        "#;
+
+        let result = run_script(script, &mut runtime);
+        println!("[test_extension] result: {result:?}");
+
+    }
     
     #[test]
     fn test_run_script() { 

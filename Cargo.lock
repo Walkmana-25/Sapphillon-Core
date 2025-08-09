@@ -5875,6 +5875,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "deno_core",
+ "deno_error",
  "deno_permissions",
  "deno_runtime",
  "env_logger",
