@@ -1,6 +1,6 @@
 [package]
 name = "sapphillon_core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Yuta Takahashi <y.highbridge04@gmail.com>"]
 license-file = "LICENSE"
@@ -19,6 +19,10 @@ env_logger = "0.11"
 tonic = "0.12.0"
 prost = "0.13.1"
 prost-types = "0.13.1"
+deno_core = "0.354.0"
+deno_runtime = "0.220.0"
+deno_permissions = "0.71.0"
+deno_error = { version = "0.7.0", features = ["serde", "serde_json", "tokio", "url"] }
 
 [build-dependencies]
 tonic-build = "0.12.0"
