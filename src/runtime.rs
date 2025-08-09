@@ -36,24 +36,27 @@ impl Default for SapphillonRuntime {
 
 
  
-/// A mutable instance of `JsRuntime` ready for executing JavaScript code.
-///
-/// Executes a JavaScript script within the provided SapphillonRuntime.
-///
-/// This function takes a JavaScript script as a string and executes it within the context of the
-/// provided SapphillonRuntime instance. The script is executed with the module specifier "workflow.js".
-///
-/// # Arguments
-///
-/// * `script` - A string slice containing the JavaScript code to be executed.
-/// * ` ext` - A vector of `OpDecl` that defines operations to be registered in the runtime. You should use `op2` to define these operations. But you do not have to use extension! macro.
-///
-/// # Returns
-///
-/// * `Result<(), Box<JsError>>` - Returns Ok(()) if the script executes successfully, or an error wrapped in Box<JsError> if an error occurs.
-///
+    /// Executes the given JavaScript code within a `JsRuntime` configured with custom operations.
+    ///
+    /// # Overview
+    /// Runs the provided JavaScript `script` in a new `JsRuntime` instance, registering the supplied vector of `OpDecl` as custom operations (ops) via an extension. Use `op2` to define these operations.
+    ///
+    /// # Arguments
+    /// - `script`: The JavaScript code to execute as a string.
+    /// - `ext`: A vector of `OpDecl` representing custom operations to be registered in the runtime.
+    ///
+    /// # Returns
+    /// - `Ok(())`: If the script executes successfully.
+    /// - `Err(Box<JsError>)`: If an error occurs during execution.
+    /// 
+    ///
+    /// # Notes
+    /// - The extension is registered with the name "ext".
+    /// - The script is always executed as the module "workflow.js".
+    ///
+    /// # Errors
+    /// - Any JavaScript execution error is returned as `Box<JsError>`.
 pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>) -> Result<(), Box<JsError>> {
-    // let ext_vec: &'static [OpDecl] = Box::leak(ext.into_boxed_slice());
     let extension = Extension{
         name: "ext",
         ops: std::borrow::Cow::Owned(ext),
